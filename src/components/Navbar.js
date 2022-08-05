@@ -24,7 +24,7 @@ const Navbar = (props) => {
           <li className="nav-item"></li>
         </ul>
 
-        <li className="btn btn-success">
+        <li className="btn btn-primary">
           Balance:{props.balance}cUSD
         </li>
       </div>

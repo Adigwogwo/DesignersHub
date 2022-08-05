@@ -9,7 +9,7 @@ import Web3 from "web3";
 import { newKitFromWeb3 } from "@celo/contractkit";
 import BigNumber from "bignumber.js";
 import IERC from "./contract/IERC.abi.json";
-import DesignersHub from './components/DesignersHub';
+import Designs from './components/DesignersHub';
 import NewDesigns from './components/NewDesigns';
 import Designershub from './contract/Designershub.abi.json';
  
@@ -59,17 +59,18 @@ function App() {
     }
   };
 
-  const getBalance = (async () => {
+  const getBalance = useCallback(async () => {
     try {
       const balance = await kit.getTotalBalance(address);
       const USDBalance = balance.cUSD.shiftedBy(-ERC20_DECIMALS).toFixed(2);
-      const contract = new kit.web3.eth.Contract(DesignersHub, contractAddress);
+      const contract = new kit.web3.eth.Contract(Designershub, contractAddress);
       setcontract(contract);
       setcUSDBalance(USDBalance);
     } catch (error) {
       console.log(error);
     }
-  });
+
+  },[address, kit]);
 
   
   const getDesigns = (async () => {
@@ -172,7 +173,7 @@ function App() {
     return (
       <div>
         <Navbar balance = {cUSDBalance} />
-        <designs
+        <Designs
         designs = {designs}
         buyDesigns = {buyDesigns}
         removeDesign= {removeDesign}
