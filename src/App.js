@@ -179,7 +179,7 @@ function App() {
         removeDesign= {removeDesign}
          
         />
-         <NewDesigns addDesign = {addDesign}
+         <NewDesigns uploadDesignjobs = {addDesign}
          
 />
       </div>
