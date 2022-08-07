@@ -34,9 +34,14 @@ contract Designershub {
         uint designTeam;
     }
 
-    mapping (uint => Designer) internal designs;
+    modifier onlyOwner(uint _index){
+        require(msg.sender == designers[_index].owner, "Only the owner can access this function");
+        _;
+    }
 
-    function uploadDesignjobs(
+    mapping (uint => Designer) internal designers;
+
+    function addDesigner(
         string memory _expertise,
         string memory _name,
         string memory _onlinePortfolio,
@@ -45,7 +50,7 @@ contract Designershub {
         uint _price
     ) public {
         uint _designTeam = 0;
-        designs[designersLength] = Designer(
+        designers[designersLength] = Designer(
             payable(msg.sender),
             _expertise,
             _name,
@@ -58,6 +63,25 @@ contract Designershub {
         designersLength++;
     }
 
+    // for designers to book design gigs
+    function bookDesigners(uint _index) public payable  {
+        require(msg.sender != designers[_index].owner, "Owner cannot buy");
+        require(
+          IERC20Token(cUsdTokenAddress).transferFrom(
+            msg.sender,
+            designers[_index].owner,
+            designers[_index].price
+          ),
+          "Transfer failed."
+        );
+        designers[_index].designTeam++;
+    }
+
+// Function using which the owner can change the price 
+    function changePrice(uint _index, uint _price) public onlyOwner(_index){
+        designers[_index].price = _price;
+    }
+
     function getDesigns(uint _index) public view returns (
         address payable,
         string memory, 
@@ -68,7 +92,7 @@ contract Designershub {
         uint, 
         uint
     ) {
-        Designer memory d = designs[_index];
+        Designer memory d = designers[_index];
         return (
 
             d.owner,
@@ -84,40 +108,27 @@ contract Designershub {
 
 
 // remove a remove design jobs
-    function removeDesignjobs(uint _index) external {
-	        require(msg.sender == designs[_index].owner, "owner alone can remove the jobs");         
-            designs[_index] = designs[designersLength - 1];
-            delete designs[designersLength - 1];
+    function removeDesignjobs(uint _index) external onlyOwner(_index){   
+            designers[_index] = designers[designersLength - 1];
+            delete designers[designersLength - 1];
             designersLength--; 
-	 }
+	}
 
     //pay back designers who aren't qualified, or didn't meet up the criteria
-    function repayDesigner(uint _index, address payable _address) public payable  {
-        require(msg.sender == designs[_index].owner, "Not owner");
+    function refund(uint _index, address payable _address) public payable  {
+        require(msg.sender == designers[_index].owner, "Not owner");
         require(
           IERC20Token(cUsdTokenAddress).transferFrom(
             msg.sender,
             payable (_address),
-            designs[_index].price
+            designers[_index].price
           ),
           "Transfer failed."
         );
     }
 
-    // for designers to book design gigs
-    function bookDesigns(uint _index) public payable  {
-        require(
-          IERC20Token(cUsdTokenAddress).transferFrom(
-            msg.sender,
-            designs[_index].owner,
-            designs[_index].price
-          ),
-          "Transfer failed."
-        );
-        designs[_index].designTeam++;
-    }
     
-    function getDesignsLength() public view returns (uint) {
+    function getDesignersLength() public view returns (uint) {
         return (designersLength);
     }
 }
