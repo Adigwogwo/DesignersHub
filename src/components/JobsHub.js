@@ -24,7 +24,7 @@ export const Projects = (props) => {
               <h4 class="card-title mt-5">List of Applicants</h4>
               {project.applicants.map((a) =>(
     <p class="card-text mt-2" key={a.index}>Id: {a.Id} Address: {a.applicantAddress}</p>
-       ))};
+       ))}
 
               {props.walletAddress !== project.admin && (
                     <button
@@ -66,5 +66,5 @@ export const Projects = (props) => {
       ))}
     </div>
   );
-};
+}
 export default Projects;
