@@ -7,13 +7,17 @@ import Web3 from "web3";
 import { newKitFromWeb3 } from "@celo/contractkit";
 import BigNumber from "bignumber.js";
 import IERC from "./contract/IERC.abi.json";
-import Designs from "./components/DesignersHub";
-import NewDesigns from "./components/NewDesigns";
+import Profiles from "./components/ProfilesHub";
+import UploadProfile from "./components/NewProfile";
+import { Uploadjobs } from "./components/NewJobs";
 import Designershub from "./contract/Designershub.abi.json";
+import { Projects } from "./components/JobsHub";
+
+
 
 const ERC20_DECIMALS = 18;
 
-const contractAddress = "0xcE584d82898730DAfe0ba3a9Fa686FF35DeD0E4F";
+const contractAddress = "0xA0b581201C40D3Bd74D55F3cE3ff0504CC3Bd942";
 const cUSDContractAddress = "0x874069Fa1Eb16D44d622F2e0Ca25eeA172369bC1";
 
 function App() {
@@ -21,7 +25,8 @@ function App() {
   const [address, setAddress] = useState(null);
   const [kit, setKit] = useState(null);
   const [cUSDBalance, setcUSDBalance] = useState(0);
-  const [designs, setDesigns] = useState([]);
+  const [profiles, setProfiles] = useState([]);
+  const [projects, setProjects] = useState([]);
 
   const connectToWallet = async () => {
     if (window.celo) {
@@ -57,33 +62,57 @@ function App() {
     }
   }, [address, kit]);
 
-  const getDesigns = async () => {
-    const designersLength = await contract.methods.getDesignsLength().call();
-    const _designs = [];
-    for (let index = 0; index < designersLength; index++) {
-      let currentDesign = new Promise(async (resolve, reject) => {
-        let designs = await contract.methods.getDesigns(index).call();
+  const getProfiles = async () => {
+    const profilesLength = await contract.methods.getDesignsLength().call();
+    const _profiles = [];
+    for (let index = 0; index < profilesLength; index++) {
+      let currentProfile = new Promise(async (resolve, reject) => {
+        let profiles = await contract.methods.getDesigner(index).call();
         resolve({
           index: index,
-          owner: designs[0],
-          expertise: designs[1],
-          name: designs[2],
-          onlinePortfolio: designs[3],
-          location: designs[4],
-          yearsExperience: designs[5],
-          price: designs[6],
-          designTeam: designs[7],
+          designer: profiles[0],
+          expertise: profiles[1],
+          name: profiles[2],
+          onlinePortfolio: profiles[3],
+          location: profiles[4],
+          yearsExperience: profiles[5],
+          price: profiles[6],
+          onContract: profiles[7],
         });
       });
-
-      _designs.push(currentDesign);
+      _profiles.push(currentProfile);
     }
 
-    const designs = await Promise.all(_designs);
-    setDesigns(designs);
+    const profiles = await Promise.all(_profiles);
+    setProfiles(profiles);
   };
 
-  const addDesign = async (
+      const getJobs = async () => {
+        const jobsLength = await contract.methods.getProjectsLength().call();
+        const _projects = [];
+        for (let index = 0; index < jobsLength; index++) {
+          let currentProject = new Promise(async (resolve, reject) => {
+            let project = await contract.methods.getJobs(index).call();
+            resolve({
+              index: index,
+              admin: project[0],
+              winner: project[1],
+              name: project[2],
+              description: project[3],
+              available: project[4],
+              completed: project[5],
+              applicants: project[6],
+            });
+          });
+
+      _projects.push(currentProject);
+    }
+
+    const projects = await Promise.all(_projects);
+    setProjects(projects);
+  };
+
+  const uploadProfile = async (
     _expertise,
     _name,
     _onlinePortfolio,
@@ -95,7 +124,7 @@ function App() {
 
     try {
       await contract.methods
-        .uploadDesignjobs(
+        .uploadProfile(
           _expertise,
           _name,
           _onlinePortfolio,
@@ -104,37 +133,83 @@ function App() {
           _price
         )
         .send({ from: address });
-      getDesigns();
+      getProfiles();
+      getJobs();
     } catch (error) {
       console.log(error);
     }
   };
 
-  const removeDesign = async (_index) => {
+  const uploadJobs = async (
+    _name,
+    _description
+  ) => {
+
     try {
-      await contract.methods.removeDesignjobs(_index).send({ from: address });
-      getDesigns();
+      await contract.methods
+        .uploadDesignjobs(
+          _name,
+         _description
+        )
+        .send({ from: address });
+      getProfiles();
+      getJobs();
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+
+  const removeProfile = async (_index) => {
+    try {
+      await contract.methods.removeDesigner(_index).send({ from: address });
+      getProfiles();
+      getJobs();
+      getBalance();
+    } catch (error) {
+      alert(error);
+    }
+  };
+  const applyToproject = async (_index) => {
+    try {
+      await contract.methods.ApplyToProject(_index).send({ from: address });
+      getProfiles();
+      getJobs();
       getBalance();
     } catch (error) {
       alert(error);
     }
   };
 
-  const buyDesigns = async (_index) => {
+  const selectDesigner = async (_index, _address) => {
     try {
       const cUSDContract = new kit.web3.eth.Contract(IERC, cUSDContractAddress);
-
+      const cost = profiles[_index].price;
       await cUSDContract.methods
-        .approve(contractAddress, designs[_index].price)
+        .approve(contractAddress, cost)
         .send({ from: address });
-      await contract.methods.buyDesigns(_index).send({ from: address });
-      getDesigns();
+      await contract.methods.ChooseDesigner(_index).send({ from: address });
+      getProfiles();
+      getJobs();
       getBalance();
-      alert("you have purchased a gig");
+      alert("you have successfully hire this designer");
     } catch (error) {
-      console.log(error);
+      alert(error);
+    }};
+
+  const endContract = async (_index) => {
+    try {
+      await contract.methods.endContract(_index).send({ from: address });
+      getProfiles();
+      getJobs();
+      getBalance();
+    } catch (error) {
+      alert(error);
     }
   };
+
+
+
 
   useEffect(() => {
     connectToWallet();
@@ -148,19 +223,29 @@ function App() {
 
   useEffect(() => {
     if (contract) {
-      getDesigns();
+      getProfiles();
+      getJobs();
     }
   }, [contract]);
 
   return (
     <div>
       <Navbar balance={cUSDBalance} />
-      <Designs
-        designs={designs}
-        buyDesigns={buyDesigns}
-        removeDesign={removeDesign}
+      <Profiles
+        profiles={profiles}
+        removeProfile={removeProfile}
+        walletAddress={address}
       />
-      <NewDesigns uploadDesignjobs={addDesign} />
+      <Projects
+      projects={projects}
+      walletAddress={address}
+      apply={applyToproject}
+      choose={selectDesigner}
+      end={endContract}
+      
+      />
+      <UploadProfile uploadProfile={uploadProfile} />
+      <Uploadjobs uploadJobs={uploadJobs} />
     </div>
   );
 }

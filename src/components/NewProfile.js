@@ -2,7 +2,7 @@ import React from "react";
 
 import { useState } from "react";
 
-export const UploadDesignjobs = (props) => {
+export const UploadProfile = (props) => {
   const [expertise, setExpertise] = useState("");
   const [name, setName] = useState("");
   const [onlinePortfolio, setOnlinePortfolio] = useState("");
@@ -24,7 +24,7 @@ export const UploadDesignjobs = (props) => {
       alert("Please fill up all fields");
       return;
     }
-    props.uploadDesignjobs(
+    props.uploadProfile(
       expertise,
       name,
       onlinePortfolio,
@@ -107,7 +107,7 @@ export const UploadDesignjobs = (props) => {
           </div>
           <div className="form-row">
           <button type="submit" className="btn btn-outline-success bot">
-            Upload Design Jobs
+            Upload Profile
           </button>
           </div>
         </div>
@@ -115,4 +115,4 @@ export const UploadDesignjobs = (props) => {
     </div>
   );
 };
-export default UploadDesignjobs;
+export default UploadProfile;

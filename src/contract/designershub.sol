@@ -32,10 +32,9 @@ interface IERC20Token {
 //book a spot by buying gigs
 
 contract Designershub {
-    uint internal designersLength = 1;
+    uint internal designersLength = 0;
     uint internal projectsLength = 0;
-    address internal cUsdTokenAddress =
-        0x874069Fa1Eb16D44d622F2e0Ca25eeA172369bC1;
+    address internal cUsdTokenAddress =   0x874069Fa1Eb16D44d622F2e0Ca25eeA172369bC1;
 
     struct Designer {
         address payable designer;
@@ -48,18 +47,26 @@ contract Designershub {
         bool onContract;
     }
 
+
+    struct Applicant {
+        uint Id;
+        address payable applicantAddress;
+    }
+
+
     // Structure of a project
     struct Project {
         // admin of the project
         address admin;
         // winner is the choosen applicant for the project
-        address winner;
+        address payable winner;
         string name;
         string description;
         // bool to check if users can still apply
         bool available;
         // completed keeps track of if a user has finished the current project
         bool completed;
+       
     }
 
     mapping(uint => Designer) private designers;
@@ -67,8 +74,8 @@ contract Designershub {
     mapping(address => uint) public designerId;
     mapping(uint => Project) public projects;
     // keeps track of designers that created a profile
-   mapping(address => bool) public isMember;
-    mapping(uint => address[]) public appliedToProject;
+    mapping(address => bool) public isMember;
+    mapping(uint => Applicant[]) public appliedToProject;
     mapping(uint => mapping(address => bool)) public applied;
 
     modifier onlyDesigner(uint _designerId) {
@@ -127,7 +134,7 @@ contract Designershub {
         require(bytes(_description).length > 0, "Empty description");
         projects[projectsLength] = Project(
             msg.sender,
-            address(0),
+            payable(address(0)),
             _name,
             _description,
             true,
@@ -136,6 +143,7 @@ contract Designershub {
         projectsLength++;
     }
 
+// getting the designers
     function getDesigner(uint _designerId)
         public
         view
@@ -143,6 +151,33 @@ contract Designershub {
     {
         return designers[_designerId];
     }
+
+
+
+// getting the jobs
+    function getJobs(uint _projectId) public view returns (
+        address ,
+        address payable,
+        string memory, 
+        string memory, 
+        bool, 
+        bool, 
+        Applicant[] memory
+    ) {
+        Project memory p = projects[_projectId];
+        Applicant[] memory applicants = appliedToProject[_projectId];
+        return (
+            p.admin,
+            p.winner, 
+            p.name, 
+            p.description,
+            p.available,
+            p.completed,
+            applicants
+        );
+    }
+
+
 
     /// @dev allow users to delete their profile
     function removeDesigner(uint _designerId)
@@ -154,7 +189,6 @@ contract Designershub {
         designers[_designerId] = designers[designersLength - 1];
         delete designers[designersLength - 1];
         delete designerId[msg.sender];
-        exists[designersLength - 1] = false;
         isMember[msg.sender] = false;
         designersLength--;
     }
@@ -166,7 +200,8 @@ contract Designershub {
             "Already working on another project"
         );
         require(!applied[_projectId][msg.sender], "Already applied");
-        appliedToProject[_projectId].push(msg.sender);
+
+        appliedToProject[_projectId].push(Applicant(designerId[msg.sender], payable(msg.sender)));
         applied[_projectId][msg.sender] = true;
     }
 
@@ -184,7 +219,7 @@ contract Designershub {
             "This designer is already working on another project"
         );
         require(projects[_projectId].available, "Project isn't available");
-        projects[_projectId].winner = _winner;
+        projects[_projectId].winner = payable(_winner);
         projects[_projectId].available = false;
         designers[designerId[_winner]].onContract = true;
         require(
