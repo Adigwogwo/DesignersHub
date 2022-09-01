@@ -31,11 +31,25 @@ export const Projects = (props) => {
                       type="button"
                       className="btn btn-success mt-2"
                       onClick={() => props.apply(project.index)}
+                      
                     >
                      Apply
                     </button>
                   
               )}
+
+
+{props.walletAddress !== project.admin && (
+         <h5 class="card-title mt-5">You cannot apply if you have not uploaded a profile</h5>
+                    
+                  
+              )}
+
+
+
+
+
+
 
             {props.walletAddress === project.admin && (
                     <form>
